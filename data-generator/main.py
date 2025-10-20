@@ -52,7 +52,7 @@ def generate_sun_intensity(quantity_of_sensors, value=None):
         return
     for k in range(4):
         data = {
-            "sensor_id": f"sensor-sum-{k+1}",
+            "sensor_id": f"sensor-sun-{k+1}",
             "temperature": round(random.uniform(0, 100000), 2),
             "timestamp": time.time()
         }
