@@ -1,41 +1,65 @@
-var builder = WebApplication.CreateBuilder(args);
+using MQTTnet;
+using MQTTnet.Client;
+using MongoDB.Driver;
+using MongoDB.Bson;
+using System.Text.Json;
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+var mongoClient = new MongoClient("mongodb://mongo:27017");
+var database = mongoClient.GetDatabase("iot_data");
+var collection = database.GetCollection<BsonDocument>("measurements");
 
-var app = builder.Build();
+var factory = new MqttFactory();
+var mqttClient = factory.CreateMqttClient();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+var options = new MqttClientOptionsBuilder()
+    .WithTcpServer("mqtt", 1883)
+    .Build();
+
+mqttClient.ApplicationMessageReceivedAsync += async e =>
 {
-    app.MapOpenApi();
-}
+    try
+    {
+        string topic = e.ApplicationMessage.Topic;
+        string payload = e.ApplicationMessage.ConvertPayloadToString();
 
-app.UseHttpsRedirection();
+        Console.WriteLine($"Recieved message: {topic} -> {payload}");
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+        var data = JsonSerializer.Deserialize<SensorData>(payload);
+
+        if (data == null)
+        {
+            Console.WriteLine("Data was not deserialized");
+            return;
+        }
+
+        var modifiedData = DataProcessor.DataModify(data);
+
+        var document = new BsonDocument
+        {
+            { "timestamp", DateTime.UtcNow },
+            { "sensor_id", modifiedData.sensor_id },
+            { "value", modifiedData.value },
+            { "source_timestamp", modifiedData.timestamp }
+        };
+
+        await collection.InsertOneAsync(document);
+        Console.WriteLine("Data was saved in MongoDB");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"That was an error during message: {ex.Message}");
+    }
 };
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+
+Console.WriteLine("Connecting with brocker MQTT...");
+await mqttClient.ConnectAsync(options);
+await mqttClient.SubscribeAsync("sensors/#");
+Console.WriteLine("Connected with MQTT and started the subscription of topics");
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.MapGet("/", () => "MQTT backend works — data saved in MongoDB.");
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

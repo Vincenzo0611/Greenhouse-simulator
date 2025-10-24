@@ -134,15 +134,15 @@
           }
         }
       },
-      "MQTTnet/5.0.1.1416": {
+      "MQTTnet/4.3.1.873": {
         "type": "package",
         "compile": {
-          "lib/net8.0/MQTTnet.dll": {
+          "lib/net7.0/MQTTnet.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net8.0/MQTTnet.dll": {
+          "lib/net7.0/MQTTnet.dll": {
             "related": ".xml"
           }
         }
@@ -426,16 +426,37 @@
         "packageIcon.png"
       ]
     },
-    "MQTTnet/5.0.1.1416": {
-      "sha512": "ONYieEMaHiIei5dAtHXywnfJGhmrd5Av5sNJSQERp6AtZdPk3xxjCR6Cv0C5RUr/XbLeHO4/HQ0Rc2bQ5NF5Mw==",
+    "MQTTnet/4.3.1.873": {
+      "sha512": "5Btmzjv9TWQewlHL6QPB3/deTxAfHf0cR1ixehH/4311oKUpiYrgt1uQZFTbyBWjR7zVKv1U3+s4o3IPm/++Ww==",
       "type": "package",
-      "path": "mqttnet/5.0.1.1416",
+      "path": "mqttnet/4.3.1.873",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "lib/net8.0/MQTTnet.dll",
-        "lib/net8.0/MQTTnet.xml",
-        "mqttnet.5.0.1.1416.nupkg.sha512",
+        "lib/net452/MQTTnet.dll",
+        "lib/net452/MQTTnet.xml",
+        "lib/net461/MQTTnet.dll",
+        "lib/net461/MQTTnet.xml",
+        "lib/net48/MQTTnet.dll",
+        "lib/net48/MQTTnet.xml",
+        "lib/net5.0/MQTTnet.dll",
+        "lib/net5.0/MQTTnet.xml",
+        "lib/net6.0/MQTTnet.dll",
+        "lib/net6.0/MQTTnet.xml",
+        "lib/net7.0/MQTTnet.dll",
+        "lib/net7.0/MQTTnet.xml",
+        "lib/netcoreapp3.1/MQTTnet.dll",
+        "lib/netcoreapp3.1/MQTTnet.xml",
+        "lib/netstandard1.3/MQTTnet.dll",
+        "lib/netstandard1.3/MQTTnet.xml",
+        "lib/netstandard2.0/MQTTnet.dll",
+        "lib/netstandard2.0/MQTTnet.xml",
+        "lib/netstandard2.1/MQTTnet.dll",
+        "lib/netstandard2.1/MQTTnet.xml",
+        "lib/uap10.0.10240/MQTTnet.dll",
+        "lib/uap10.0.10240/MQTTnet.pri",
+        "lib/uap10.0.10240/MQTTnet.xml",
+        "mqttnet.4.3.1.873.nupkg.sha512",
         "mqttnet.nuspec",
         "nuget.png"
       ]
@@ -685,7 +706,7 @@
   },
   "projectFileDependencyGroups": {
     "net9.0": [
-      "MQTTnet >= 5.0.1.1416",
+      "MQTTnet >= 4.3.1",
       "Microsoft.AspNetCore.OpenApi >= 9.0.0",
       "MongoDB.Driver >= 3.5.0"
     ]
@@ -743,7 +764,7 @@
         "dependencies": {
           "MQTTnet": {
             "target": "Package",
-            "version": "[5.0.1.1416, )"
+            "version": "[4.3.1, )"
           },
           "Microsoft.AspNetCore.OpenApi": {
             "target": "Package",
@@ -776,5 +797,17 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1603",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Wersja backend jest zależna od MQTTnet (>= 4.3.1), ale nie znaleziono MQTTnet 4.3.1. Zamiast tego rozwiązano MQTTnet 4.3.1.873.",
+      "libraryId": "MQTTnet",
+      "targetGraphs": [
+        "net9.0"
+      ]
+    }
+  ]
 }
