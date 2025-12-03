@@ -12,6 +12,8 @@ using System.Numerics;
 using System.Collections.Generic;
 using Nethereum.Web3;
 using Nethereum.Web3.Accounts;
+using Nethereum.Hex.HexTypes;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,9 +23,9 @@ var app = builder.Build();
 string rpcUrl = "http://blockchain:8545";
 string privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 string contractAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
-string abi = File.ReadAllText("contracts/SensorToken.json");
+string abi = File.ReadAllText("contracts/SensorToken.abi");
 
-var account = new Account(privateKey, 1337);
+var account = new Account(privateKey, 31337);
 var web3 = new Web3(account, rpcUrl);
 var contract = web3.Eth.GetContract(abi, contractAddress);
 var rewardFn = contract.GetFunction("rewardSensor");
@@ -83,8 +85,15 @@ mqttClient.ApplicationMessageReceivedAsync += async e =>
 
         if (SensorWallets.Wallets.TryGetValue(modified.sensor_id, out string walletAddress))
         {
-            var txHash = await rewardFn.SendTransactionAsync(account.Address, new object[] { walletAddress });
-            Console.WriteLine($"Sensor {data.sensor_id} nagrodzony tokenem. TX: {txHash}");
+            BigInteger amount = Web3.Convert.ToWei(100);
+            // Wywołanie funkcji kontraktu rewardFn
+            var txReceipt = await rewardFn.SendTransactionAndWaitForReceiptAsync(
+                from: account.Address, 
+                gas: new HexBigInteger(6000000), 
+                value: null, 
+                functionInput: new object[] { walletAddress, amount }
+            );
+            Console.WriteLine($"Sensor {data.sensor_id} o adresise {walletAddress} nagrodzony tokenem. TX: {txReceipt.TransactionHash}");
         }
         else
         {
@@ -175,7 +184,7 @@ app.MapGet("/sensors/rewards", async () =>
     {
         string sensorId = kvp.Key;
         string walletAddress = kvp.Value;
-
+        Console.WriteLine($"Checking balance for sensor {sensorId} at wallet {walletAddress}");
         var balance = await balanceOfFn.CallAsync<BigInteger>(walletAddress);
 
         results.Add(new
@@ -218,7 +227,6 @@ static string ToCsv(IEnumerable<Measurement> list)
 
 
 // --------------------- RUN ---------------------
-
 app.Run();
 
 public class Measurement
