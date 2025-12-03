@@ -22,7 +22,7 @@ var app = builder.Build();
 // --------------------- BLOCKCHAIN SETUP ---------------------
 string rpcUrl = "http://blockchain:8545";
 string privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
-string contractAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+string contractAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
 string abi = File.ReadAllText("contracts/SensorToken.abi");
 
 var account = new Account(privateKey, 31337);
@@ -30,6 +30,11 @@ var web3 = new Web3(account, rpcUrl);
 var contract = web3.Eth.GetContract(abi, contractAddress);
 var rewardFn = contract.GetFunction("rewardSensor");
 var balanceOfFn = contract.GetFunction("balanceOf");
+
+var ownerFn = contract.GetFunction("owner");
+var owner = await ownerFn.CallAsync<string>();
+Console.WriteLine($"Contract owner: {owner}");
+
 
 // --------------------- MONGO SETUP ---------------------
 
@@ -85,7 +90,7 @@ mqttClient.ApplicationMessageReceivedAsync += async e =>
 
         if (SensorWallets.Wallets.TryGetValue(modified.sensor_id, out string walletAddress))
         {
-            BigInteger amount = Web3.Convert.ToWei(100);
+            BigInteger amount = Web3.Convert.ToWei(1);
             // Wywołanie funkcji kontraktu rewardFn
             var txReceipt = await rewardFn.SendTransactionAndWaitForReceiptAsync(
                 from: account.Address, 
@@ -127,7 +132,7 @@ app.MapGet("/measurements", async (HttpRequest request) =>
 
     string? dataType = q["dataType"].FirstOrDefault();
     string[] sensors = ParseCsv(q["sensors"].FirstOrDefault());
-    string sortBy = q["sortBy"].FirstOrDefault() ?? "sourceTimestamp";
+    string sortBy = q["sortBy"].FirstOrDefault() ?? "source_timestamp";
     string sortDir = q["sortDir"].FirstOrDefault() ?? "desc";
 
     int page = int.TryParse(q["page"], out var p) ? p : 1;
@@ -186,7 +191,7 @@ app.MapGet("/sensors/rewards", async () =>
         string walletAddress = kvp.Value;
         Console.WriteLine($"Checking balance for sensor {sensorId} at wallet {walletAddress}");
         var balance = await balanceOfFn.CallAsync<BigInteger>(walletAddress);
-
+        Console.WriteLine($"Balance: {balance} tokens");
         results.Add(new
         {
             sensor = sensorId,
