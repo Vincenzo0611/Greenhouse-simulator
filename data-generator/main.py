@@ -85,9 +85,9 @@ mqtt_port = 1883
 client = mqtt.Client()
 client.connect(mqtt_host, mqtt_port, 60)
 
-for i in range(quantity_of_measurement):
+while True:
     generate_temp(4)
     generate_humidity(4)
     generate_sun_intensity(4)
     generate_co2(4)
-    time.sleep(2)
+    time.sleep(20)
