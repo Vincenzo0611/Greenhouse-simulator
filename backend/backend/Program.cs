@@ -7,9 +7,33 @@ using System.Globalization;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using System.Numerics;
+
+using System.Collections.Generic;
+using Nethereum.Web3;
+using Nethereum.Web3.Accounts;
+using Nethereum.Hex.HexTypes;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
+
+// --------------------- BLOCKCHAIN SETUP ---------------------
+string rpcUrl = "http://blockchain:8545";
+string privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+string contractAddress = "0x5fbdb2315678afecb367f032d93f642f64180aa3";
+string abi = File.ReadAllText("contracts/SensorToken.abi");
+
+var account = new Account(privateKey, 31337);
+var web3 = new Web3(account, rpcUrl);
+var contract = web3.Eth.GetContract(abi, contractAddress);
+var rewardFn = contract.GetFunction("rewardSensor");
+var balanceOfFn = contract.GetFunction("balanceOf");
+
+var ownerFn = contract.GetFunction("owner");
+var owner = await ownerFn.CallAsync<string>();
+Console.WriteLine($"Contract owner: {owner}");
 
 
 // --------------------- MONGO SETUP ---------------------
@@ -63,6 +87,23 @@ mqttClient.ApplicationMessageReceivedAsync += async e =>
         await collection.InsertOneAsync(document);
 
         Console.WriteLine("Saved to MongoDB.");
+
+        if (SensorWallets.Wallets.TryGetValue(modified.sensor_id, out string walletAddress))
+        {
+            BigInteger amount = Web3.Convert.ToWei(1);
+            // Wywołanie funkcji kontraktu rewardFn
+            var txReceipt = await rewardFn.SendTransactionAndWaitForReceiptAsync(
+                from: account.Address, 
+                gas: new HexBigInteger(6000000), 
+                value: null, 
+                functionInput: new object[] { walletAddress, amount }
+            );
+            Console.WriteLine($"Sensor {data.sensor_id} o adresise {walletAddress} nagrodzony tokenem. TX: {txReceipt.TransactionHash}");
+        }
+        else
+        {
+            Console.WriteLine($"Brak przypisanego portfela dla sensora {data.sensor_id}");
+        }
     }
     catch (Exception ex)
     {
@@ -91,7 +132,7 @@ app.MapGet("/measurements", async (HttpRequest request) =>
 
     string? dataType = q["dataType"].FirstOrDefault();
     string[] sensors = ParseCsv(q["sensors"].FirstOrDefault());
-    string sortBy = q["sortBy"].FirstOrDefault() ?? "sourceTimestamp";
+    string sortBy = q["sortBy"].FirstOrDefault() ?? "source_timestamp";
     string sortDir = q["sortDir"].FirstOrDefault() ?? "desc";
 
     int page = int.TryParse(q["page"], out var p) ? p : 1;
@@ -140,7 +181,29 @@ app.MapGet("/measurements", async (HttpRequest request) =>
     return Results.Ok(results);
 });
 
-app.MapGet("/test", () => "OK TEST");
+app.MapGet("/sensors/rewards", async () =>
+{
+    var results = new List<object>();
+
+    foreach (var kvp in SensorWallets.Wallets)
+    {
+        string sensorId = kvp.Key;
+        string walletAddress = kvp.Value;
+        Console.WriteLine($"Checking balance for sensor {sensorId} at wallet {walletAddress}");
+        var balance = await balanceOfFn.CallAsync<BigInteger>(walletAddress);
+        Console.WriteLine($"Balance: {balance} tokens");
+        results.Add(new
+        {
+            sensor = sensorId,
+            wallet = walletAddress,
+            balance = Web3.Convert.FromWei(balance)
+        });
+    }
+
+    return Results.Ok(results);
+});
+
+
 
 foreach (var ep in app.Services.GetRequiredService<EndpointDataSource>().Endpoints)
 {
@@ -169,7 +232,6 @@ static string ToCsv(IEnumerable<Measurement> list)
 
 
 // --------------------- RUN ---------------------
-
 app.Run();
 
 public class Measurement

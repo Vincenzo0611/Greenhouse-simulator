@@ -1,0 +1,18 @@
+# 1. Builder – buduje projekt
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY . .
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/publish
+
+# 2. Runtime – uruchamia aplikację
+FROM mcr.microsoft.com/dotnet/runtime:8.0 AS final
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+# Pliki ABI i BIN muszą być skopiowane automatycznie
+COPY contracts ./contracts
+
+ENTRYPOINT ["dotnet", "DeployContract.dll"]
