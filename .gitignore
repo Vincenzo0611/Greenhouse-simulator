@@ -14,4 +14,4 @@ logs/
 mosquitto/data/
 mosquitto/log/
 
-./blockchain/node_modules
+/blockchain/node_modules

@@ -10,6 +10,12 @@ services:
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
 
+  blockchain:
+    image: ghcr.io/foundry-rs/foundry:latest
+    container_name: blockchain
+    command: anvil --host 0.0.0.0 --chain-id 1337
+    ports:
+      - "8545:8545"
   mongo:
     image: mongo
     container_name: mongo
@@ -24,6 +30,7 @@ services:
     depends_on:
       - mqtt
       - mongo
+      - blockchain
     ports:
       - "8080:8080"
 

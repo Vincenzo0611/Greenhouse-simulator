@@ -7,10 +7,27 @@ using System.Globalization;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using System.Numerics;
+
+using System.Collections.Generic;
+using Nethereum.Web3;
+using Nethereum.Web3.Accounts;
+
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
+// --------------------- BLOCKCHAIN SETUP ---------------------
+string rpcUrl = "http://blockchain:8545";
+string privateKey = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+string contractAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+string abi = File.ReadAllText("contracts/SensorToken.json");
+
+var account = new Account(privateKey, 1337);
+var web3 = new Web3(account, rpcUrl);
+var contract = web3.Eth.GetContract(abi, contractAddress);
+var rewardFn = contract.GetFunction("rewardSensor");
+var balanceOfFn = contract.GetFunction("balanceOf");
 
 // --------------------- MONGO SETUP ---------------------
 
@@ -63,6 +80,16 @@ mqttClient.ApplicationMessageReceivedAsync += async e =>
         await collection.InsertOneAsync(document);
 
         Console.WriteLine("Saved to MongoDB.");
+
+        if (SensorWallets.Wallets.TryGetValue(modified.sensor_id, out string walletAddress))
+        {
+            var txHash = await rewardFn.SendTransactionAsync(account.Address, new object[] { walletAddress });
+            Console.WriteLine($"Sensor {data.sensor_id} nagrodzony tokenem. TX: {txHash}");
+        }
+        else
+        {
+            Console.WriteLine($"Brak przypisanego portfela dla sensora {data.sensor_id}");
+        }
     }
     catch (Exception ex)
     {
@@ -140,7 +167,29 @@ app.MapGet("/measurements", async (HttpRequest request) =>
     return Results.Ok(results);
 });
 
-app.MapGet("/test", () => "OK TEST");
+app.MapGet("/sensors/rewards", async () =>
+{
+    var results = new List<object>();
+
+    foreach (var kvp in SensorWallets.Wallets)
+    {
+        string sensorId = kvp.Key;
+        string walletAddress = kvp.Value;
+
+        var balance = await balanceOfFn.CallAsync<BigInteger>(walletAddress);
+
+        results.Add(new
+        {
+            sensor = sensorId,
+            wallet = walletAddress,
+            balance = Web3.Convert.FromWei(balance)
+        });
+    }
+
+    return Results.Ok(results);
+});
+
+
 
 foreach (var ep in app.Services.GetRequiredService<EndpointDataSource>().Endpoints)
 {
