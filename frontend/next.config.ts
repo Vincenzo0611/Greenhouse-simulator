@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         source: '/api/measurements',
         destination: 'http://localhost:8080/measurements',
       },
+      {
+        source: '/api/sensors/rewards',
+        destination: 'http://localhost:8080/sensors/rewards',
+      },
     ];
   },
 };

@@ -1,9 +1,21 @@
 import type { SensorId } from "@/store/slices/sensorSlice";
-import { addSensorDataById, setInitialLoading, setErrorById } from "@/store/slices/sensorSlice";
+import {
+  addSensorDataById,
+  setInitialLoading,
+  setErrorById,
+  setSensorWalletById,
+} from "@/store/slices/sensorSlice";
 import type { AppDispatch } from "@/store/store";
-import { fetchDataByType, groupBySensorId, getSensorPrefix, type DataType } from "./api/sensorApi";
+import {
+  fetchDataByType,
+  groupBySensorId,
+  getSensorPrefix,
+  type DataType,
+  fetchSensorData,
+} from "./api/sensorApi";
+import { selectSensorDataById } from "@/store/hooks";
 
-const INITIAL_PAGE_SIZE = 1000;
+const INITIAL_PAGE_SIZE = 10000;
 
 export const loadInitialData = async (dispatch: AppDispatch) => {
   dispatch(setInitialLoading(true));
@@ -13,6 +25,17 @@ export const loadInitialData = async (dispatch: AppDispatch) => {
   const dataTypes: DataType[] = ["temperature", "humidity", "sunlight", "co2"];
 
   try {
+    const sensorData = await fetchSensorData();
+    sensorData.map((data) =>
+      dispatch(
+        setSensorWalletById({
+          sensorId: data.sensor as SensorId,
+          walletAddress: data.wallet,
+          balance: data.balance,
+        })
+      )
+    );
+
     // Pobierz dane dla wszystkich typów równolegle (tylko 4 fetche)
     const promises = dataTypes.map(async (dataType) => {
       try {
@@ -27,24 +50,30 @@ export const loadInitialData = async (dispatch: AppDispatch) => {
             Id: entry.id,
           }));
 
-          dispatch(addSensorDataById({
-            sensorId: sensorId as SensorId,
-            data: measurements,
-          }));
+          dispatch(
+            addSensorDataById({
+              sensorId: sensorId as SensorId,
+              data: measurements,
+            })
+          );
 
-          console.log(`Załadowano ${measurements.length} pomiarów dla ${sensorId}`);
+          console.log(
+            `Załadowano ${measurements.length} pomiarów dla ${sensorId}`
+          );
         });
-
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
         console.error(`Błąd ładowania danych dla ${dataType}:`, errorMessage);
         // Ustaw błąd dla wszystkich sensorów tego typu
         const sensorPrefix = getSensorPrefix(dataType);
         for (let i = 1; i <= 4; i++) {
-          dispatch(setErrorById({ 
-            sensorId: `sensor-${sensorPrefix}-${i}` as SensorId, 
-            error: errorMessage 
-          }));
+          dispatch(
+            setErrorById({
+              sensorId: `sensor-${sensorPrefix}-${i}` as SensorId,
+              error: errorMessage,
+            })
+          );
         }
       }
     });

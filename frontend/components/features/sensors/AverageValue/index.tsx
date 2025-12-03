@@ -54,12 +54,10 @@ const AverageValue = ({ sensorType }: AverageValueProps) => {
   const overallAverage = calculateOverallAverage();
 
   // Pobierz prefix ID dla danego typu sensora
- 
 
   const prefix = getSensorPrefix(sensorType);
 
   const Icon = SENSOR_ICONS[sensorType];
-
 
   const colorBg = colorBgMap[sensorType];
 
@@ -97,16 +95,31 @@ const AverageValue = ({ sensorType }: AverageValueProps) => {
                 <h4 className="text-xs font-medium text-muted-foreground ">
                   Sensor {num}
                 </h4>
-               
+                {sensor.balance ? (
+                  <p className="text-[10px] font-semibold bg-purple-300 px-2 py-1 rounded-full">
+                    {sensor.balance.toFixed(2)} ETH
+                  </p>
+                ) : (
+                  <p className="text-xs font-semibold text-red-500">
+                    Brak monet
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-1 mb-2">
                 <History size={20} />
-                <p className="text-sm font-semibold">{lastMeasurement.value} {SENSOR_UNITS[sensorType]}</p>
+                <p className="text-sm font-semibold">
+                  {lastMeasurement.value} {SENSOR_UNITS[sensorType]}
+                </p>
               </div>
               <p className="text-xs">
-                Średnia:{" "}
-                {average} {SENSOR_UNITS[sensorType]}
+                Średnia: {average} {SENSOR_UNITS[sensorType]}
               </p>
+              <div className="text-[8px]  mt-1">
+                Adres:
+                <p className="text-[8px] py-0.5 px-0.5 rounded-xs bg-gray-300 text-gray-500">
+                  {sensor.walletAddress || "Brak danych"}
+                </p>
+              </div>
             </div>
           );
         })}

@@ -9,6 +9,12 @@ export type DataType = "temperature" | "humidity" | "sunlight" | "co2";
 
 const API_BASE_URL = "/api";
 
+type ApiSensorData = {
+  sensor: string;
+  wallet: string;
+  balance: number;
+}
+
 /**
  * Pobiera dane pomiarów dla konkretnego typu sensora
  */
@@ -16,7 +22,7 @@ export const fetchDataByType = async (
   dataType: DataType,
   pageSize: number = 500
 ): Promise<ApiMeasurement[]> => {
-  const url = `${API_BASE_URL}/measurements?dataType=${dataType}&pageSize=${pageSize}&sortBy=sourceTimestamp&sortOrder=desc`;
+  const url = `${API_BASE_URL}/measurements?dataType=${dataType}&pageSize=${pageSize}&sortOrder=desc`;
   
   const response = await fetch(url);
 
@@ -27,6 +33,18 @@ export const fetchDataByType = async (
   
   return await response.json();
 };
+
+export const fetchSensorData = async () :Promise<ApiSensorData[]> =>{
+  const ulr = `${API_BASE_URL}/sensors/rewards`;
+
+  const response = await fetch(ulr);
+
+  if(!response.ok){
+    throw new Error(`Failed to fetch sensor data: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
 
 export const groupBySensorId = (
   apiData: ApiMeasurement[]

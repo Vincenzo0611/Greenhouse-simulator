@@ -174,18 +174,18 @@ const TableComponent = ({ sensorType }: TableComponentProps) => {
           </TabsList>
           <div className="flex items-stretch gap-2">
             <Link
-              className="flex gap-1 items-center border px-4 py-1 rounded-lg shadow-xs "
+              className="flex text-xs gap-1 items-center border px-4 py-1 rounded-lg shadow-xs "
               href={"fdfds"}
             >
               Pobierz CSV
-              <Download />
+              <Download size={15} />
             </Link>
             <Link
-              className="flex gap-1 items-center border px-4 py-1 rounded-lg shadow-xs "
+              className="flex gap-1 text-xs items-center border px-4 py-1 rounded-lg shadow-xs "
               href={"fdfds"}
             >
               Pobierz JSON
-              <FileBraces className="text-orange-600" />
+              <FileBraces size={15} className="text-orange-600" />
             </Link>
           </div>
         </div>
