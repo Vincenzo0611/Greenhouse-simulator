@@ -56,6 +56,16 @@ services:
     networks:
       - default
 
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    networks:
+      - default
+
 networks:
   default:
     driver: bridge
