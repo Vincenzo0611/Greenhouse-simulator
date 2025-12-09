@@ -72,7 +72,6 @@ mqttClient.ApplicationMessageReceivedAsync += async e =>
             return;
         }
 
-        // Twoje przetwarzanie danych
         var modified = DataProcessor.DataModify(data);
 
         var document = new Measurement
@@ -91,7 +90,6 @@ mqttClient.ApplicationMessageReceivedAsync += async e =>
         if (SensorWallets.Wallets.TryGetValue(modified.sensor_id, out string walletAddress))
         {
             BigInteger amount = Web3.Convert.ToWei(1);
-            // Wywołanie funkcji kontraktu rewardFn
             var txReceipt = await rewardFn.SendTransactionAndWaitForReceiptAsync(
                 from: account.Address, 
                 gas: new HexBigInteger(6000000), 
@@ -125,7 +123,6 @@ Console.WriteLine("MQTT connected & subscribed.");
 app.MapGet("/", () => "MQTT backend works — data saved in MongoDB.");
 
 
-// 1) Pobieranie danych z filtrowaniem i sortowaniem + eksport CSV/JSON
 app.MapGet("/measurements", async (HttpRequest request) =>
 {
     var q = request.Query;
@@ -162,7 +159,6 @@ app.MapGet("/measurements", async (HttpRequest request) =>
         .Limit(pageSize)
         .ToListAsync();
 
-    // CSV
     if (format == "csv")
     {
         Console.WriteLine("csv");
@@ -170,7 +166,6 @@ app.MapGet("/measurements", async (HttpRequest request) =>
         return Results.File(Encoding.UTF8.GetBytes(csv), "text/csv", "measurements.csv");
     }
 
-    // JSON download
     if (format == "json")
     {
         Console.WriteLine("json");
