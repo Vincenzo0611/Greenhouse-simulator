@@ -1,4 +1,21 @@
 services:
+  blockchain:
+    image: ghcr.io/foundry-rs/foundry
+    container_name: blockchain
+    environment:
+      ANVIL_IP_ADDR: "0.0.0.0"
+    working_dir: /anvil
+    ports:
+      - "8545:8545"
+    command: anvil --chain-id 31337
+  deployer:
+    build: ./backend/DeployContract
+    container_name: deployer
+    depends_on:
+      - blockchain
+    volumes:
+      - ./shared:/shared
+    command: ["dotnet", "DeployContract.dll"]
   mqtt:
     image: eclipse-mosquitto
     container_name: mqtt
@@ -9,3 +26,46 @@ services:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+
+  mongo:
+    image: mongo
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo/data:/data/db
+
+  backend:
+    build: ./backend/backend
+    container_name: dotnet-backend
+    depends_on:
+      - mqtt
+      - mongo
+      - blockchain
+    ports:
+      - "8080:8080"
+
+  generator:
+    build: ./data-generator
+    container_name: generator
+    depends_on:
+      - mqtt
+    environment:
+      - MQTT_HOST=mqtt  
+      - MQTT_PORT=1883
+    networks:
+      - default
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge

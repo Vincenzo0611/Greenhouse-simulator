@@ -1,0 +1,17 @@
+# .Net
+/backend/backend/bin/
+/backend/backend/obj/
+/backend/backend/app/publish/
+/backend/backend/out/
+
+# Logs
+*.log
+logs/
+*.tmp
+*.temp
+
+/mongo/data/
+mosquitto/data/
+mosquitto/log/
+
+/blockchain/node_modules

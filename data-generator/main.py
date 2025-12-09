@@ -8,7 +8,7 @@ def generate_temp(quantity_of_sensors, value=None):
     if value is not None:
         data = {
             "sensor_id": "sensor-tmp-1",
-            "temperature": value,
+            "value": value,
             "timestamp": time.time()
         }
         client.publish("sensors/data", json.dumps(data))
@@ -17,7 +17,7 @@ def generate_temp(quantity_of_sensors, value=None):
     for k in range(4):
         data = {
             "sensor_id": f"sensor-tmp-{k+1}",
-            "temperature": round(random.uniform(20.0, 25.0), 2),
+            "value": round(random.uniform(20.0, 25.0), 2),
             "timestamp": time.time()
         }
         client.publish("sensors/data", json.dumps(data))
@@ -26,7 +26,7 @@ def generate_humidity(quantity_of_sensors, value=None):
     if value is not None:
         data = {
             "sensor_id": "sensor-hum-1",
-            "temperature": value,
+            "value": value,
             "timestamp": time.time()
         }
         client.publish("sensors/data", json.dumps(data))
@@ -35,7 +35,7 @@ def generate_humidity(quantity_of_sensors, value=None):
     for k in range(4):
         data = {
             "sensor_id": f"sensor-hum-{k+1}",
-            "temperature": round(random.uniform(45.0, 85.0), 2),
+            "value": round(random.uniform(45.0, 85.0), 2),
             "timestamp": time.time()
         }
         client.publish("sensors/data", json.dumps(data))
@@ -44,7 +44,7 @@ def generate_sun_intensity(quantity_of_sensors, value=None):
     if value is not None:
         data = {
             "sensor_id": "sensor-sun-1",
-            "temperature": value,
+            "value": value,
             "timestamp": time.time()
         }
         client.publish("sensors/data", json.dumps(data))
@@ -53,7 +53,7 @@ def generate_sun_intensity(quantity_of_sensors, value=None):
     for k in range(4):
         data = {
             "sensor_id": f"sensor-sun-{k+1}",
-            "temperature": round(random.uniform(0, 100000), 2),
+            "value": round(random.uniform(0, 100000), 2),
             "timestamp": time.time()
         }
         client.publish("sensors/data", json.dumps(data))
@@ -62,7 +62,7 @@ def generate_co2(quantity_of_sensors, value=None):
     if value is not None:
         data = {
             "sensor_id": "sensor-co2-1",
-            "temperature": value,
+            "value": value,
             "timestamp": time.time()
         }
         client.publish("sensors/data", json.dumps(data))
@@ -71,7 +71,7 @@ def generate_co2(quantity_of_sensors, value=None):
     for k in range(4):
         data = {
             "sensor_id": f"sensor-co2-{k+1}",
-            "temperature": round(random.uniform(450, 1200), 2),
+            "value": round(random.uniform(450, 1200), 2),
             "timestamp": time.time()
         }
         client.publish("sensors/data", json.dumps(data))
@@ -79,15 +79,15 @@ def generate_co2(quantity_of_sensors, value=None):
 
 
 quantity_of_measurement = 2
-mqtt_host = "localhost"
+mqtt_host = "mqtt"
 mqtt_port = 1883
 
 client = mqtt.Client()
 client.connect(mqtt_host, mqtt_port, 60)
 
-for i in range(quantity_of_measurement):
+while True:
     generate_temp(4)
     generate_humidity(4)
     generate_sun_intensity(4)
     generate_co2(4)
-    time.sleep(2)
+    time.sleep(20)
