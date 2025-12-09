@@ -175,14 +175,14 @@ const TableComponent = ({ sensorType }: TableComponentProps) => {
           <div className="flex items-stretch gap-2">
             <a
               className="flex text-xs gap-1 items-center border px-4 py-1 rounded-lg shadow-xs "
-              href={"http://localhost:8080/measurements?format=csv"}
+             href={`http://localhost:8080/measurements?dataType=${sensorType}&format=csv`}
             >
               Pobierz CSV
               <Download size={15} />
             </a>
             <a
               className="flex gap-1 text-xs items-center border px-4 py-1 rounded-lg shadow-xs "
-              href={"http://localhost:8080/measurements?format=json"}
+              href={`http://localhost:8080/measurements?dataType=${sensorType}&format=json`}
             >
               Pobierz JSON
               <FileBraces size={15} className="text-orange-600" />
